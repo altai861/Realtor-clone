@@ -3,7 +3,11 @@ import { AiFillEyeInvisible } from 'react-icons/ai'
 import { AiFillEye } from 'react-icons/ai'
 import { Link } from 'react-router-dom'
 import OAuth from '../components/OAuth'
-
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { db } from '../firebase';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const Signup = () => {
 
@@ -15,6 +19,8 @@ const Signup = () => {
     password: "",
   })
 
+  const navigate = useNavigate();
+
   const {name, email, password} = formData;
 
   function onChange(e){
@@ -25,6 +31,33 @@ const Signup = () => {
     ))
   }
 
+  async function onSubmit(e){
+    e.preventDefault();
+    
+    try {
+      const auth = getAuth()
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+
+      updateProfile(auth.currentUser, {
+        displayName: name,
+      })
+
+      const user = userCredential.user;
+
+      const formDataCopy = {...formData};
+      delete formDataCopy.password;
+      
+      formDataCopy.timestamp = serverTimestamp();
+      await setDoc(doc(db, "users", user.uid), formDataCopy)
+      //toast.success("Sign up was successful.");
+      console.log(user);
+      navigate("/")
+    } catch (error) {
+      toast.error("Something went wrong with the registration.");
+      
+    }
+  }
+
   return (
     <section>
       <h1 className="text-3xl text-center mt-6 font-bold">Sign Up</h1>
@@ -33,7 +66,7 @@ const Signup = () => {
           <img src="https://images.unsplash.com/flagged/photo-1564767609342-620cb19b2357?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8a2V5fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=1400&q=60" alt="key" className="w-full rounded-2xl"></img>
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form >
+          <form onSubmit={onSubmit}>
             <input type="text" id="name" value={name} onChange={onChange} placeholder="Full Name" className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6"/>
 
             <input type="email" id="email" value={email} onChange={onChange} placeholder="Email address" className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6"/>
