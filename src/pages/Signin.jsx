@@ -1,14 +1,15 @@
 import React, { useState } from 'react'
 import { AiFillEyeInvisible } from 'react-icons/ai'
 import { AiFillEye } from 'react-icons/ai'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import OAuth from '../components/OAuth'
-
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import {toast} from "react-toastify";
 
 const Signin = () => {
 
   const [showPassword, setShowPassword] = useState(false)
-
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,6 +25,21 @@ const Signin = () => {
     ))
   }
 
+  async function onSubmit(e){
+    e.preventDefault()
+    try {
+      const auth = getAuth()
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      if (userCredential.user){
+        navigate("/")
+      }
+      
+    } catch (error) {
+      toast.error("Wrong user credentials.")
+    }
+
+  }
+
   return (
     <section>
       <h1 className="text-3xl text-center mt-6 font-bold">Sign in</h1>
@@ -32,7 +48,7 @@ const Signin = () => {
           <img src="https://images.unsplash.com/flagged/photo-1564767609342-620cb19b2357?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8a2V5fGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=1400&q=60" alt="key" className="w-full rounded-2xl"></img>
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form >
+          <form onSubmit={onSubmit}>
             <input type="email" id="email" value={email} onChange={onChange} placeholder="Email address" className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6"/>
             <div className='relative mb-6'>
               <input type={showPassword ? "text" : "password"} id="password" value={password} onChange={onChange} placeholder="Password" className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"/>
